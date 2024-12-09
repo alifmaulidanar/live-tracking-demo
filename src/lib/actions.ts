@@ -1,4 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+// Get the last written time from the local storage or indexedDB
 const getLastWritten = () => {
   const lastWritten = localStorage.getItem('lastWritten');
   if (lastWritten) {
@@ -8,6 +11,7 @@ const getLastWritten = () => {
   }
 };
 
+// Get the last written time from indexedDB
 const getLastWrittenFromIndexedDB = () => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('locationDB', 1);
@@ -32,6 +36,7 @@ const getLastWrittenFromIndexedDB = () => {
   });
 };
 
+// Check if it's possible to write data
 const canWriteData = async () => {
   const lastWritten = await getLastWritten();
   const now = new Date().getTime();
@@ -44,12 +49,13 @@ const canWriteData = async () => {
   return true;
 };
 
+// Save location to the main database
 export const saveLocationToDatabase = async (user_id: string, latitude: number, longitude: number) => {
   const locationData = { user_id, latitude, longitude };
 
   if (navigator.onLine) {
     if (await canWriteData()) {
-      const response = await fetch('http://127.0.0.1:8787/save-location', {
+      const response = await fetch(`${BASE_URL}/save-location`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,6 +86,7 @@ export const saveLocationToDatabase = async (user_id: string, latitude: number, 
   }
 };
 
+// Save location to indexedDB
 function storeLocationData(location: any) {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open('locationDB', 1);
@@ -107,14 +114,14 @@ function storeLocationData(location: any) {
       console.log('Please check your connection to save to the main database.');
       resolve(true);
     };
-
     request.onerror = reject;
   });
 }
 
+// Get the latest location for each user
 export const getLatestLocationForEachUser = async () => {
   try {
-    const response = await fetch('http://127.0.0.1:8787/latest-locations');
+    const response = await fetch(`${BASE_URL}/latest-locations`);
     const data = await response.json();
 
     if (response.ok) {

@@ -1,9 +1,10 @@
 import supabase from '@/utils/supabase';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const supabaseLocalStorageSession = import.meta.env.VITE_SUPABASE_LOCAL_STORAGE_SESSION;
 
 export const handleLogin = async (email: string, password: string) => {
   try {
-    const response = await fetch('http://127.0.0.1:8787/login', {
+    const response = await fetch(`${BASE_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export const handleLogout = async () => {
   if (!isConfirmed) return;
 
   try {
-    const response = await fetch('http://127.0.0.1:8787/logout', {
+    const response = await fetch(`${BASE_URL}/logout`, {
       method: 'POST',
     });
 

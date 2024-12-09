@@ -1,9 +1,10 @@
 import { User } from '@/types';
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Fetch users from the backend API
 export const fetchUsers = async (): Promise<User[]> => {
   try {
-    const response = await fetch('http://127.0.0.1:8787/users');
+    const response = await fetch(`${BASE_URL}/users`);
     const data = await response.json();
 
     if (response.ok) {
@@ -35,7 +36,7 @@ export const handleAddUser = async (
   };
 
   try {
-    const response = await fetch('http://127.0.0.1:8787/adduser', {
+    const response = await fetch(`${BASE_URL}/adduser`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ export const handleUpdateUser = async (
   try {
     const method = selectedUser ? 'PUT' : 'POST';
 
-    const response = await fetch('http://127.0.0.1:8787/updateuser', {
+    const response = await fetch(`${BASE_URL}/updateuser`, {
       method: method,
       headers: {
         'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export const handleDeleteUser = async (
   selectedUser: User | null
 ): Promise<User[]> => {
   try {
-    const response = await fetch('http://127.0.0.1:8787/deleteuser', {
+    const response = await fetch(`${BASE_URL}/deleteuser`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

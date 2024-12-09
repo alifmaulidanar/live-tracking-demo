@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import supabase from "@/utils/supabase";
 import { useRole } from "@/hooks/useRole";
-import LandingPage from "./pages/LandingPage";
 import { useState, useEffect } from "react";
+import LandingPage from "./pages/LandingPage";
+import { Button } from "./components/ui/button";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import UsersPage from "@/pages/(admin)/users/UsersPage";
 import { LoginForm } from "@/components/customs/login-form";
@@ -15,6 +17,8 @@ function App() {
   const [, setUser] = useState<User | null>(null);
   const { role, loading: roleLoading } = useRole();
   const userSession = localStorage.getItem(import.meta.env.VITE_SUPABASE_LOCAL_STORAGE_SESSION);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [installPromptVisible, setInstallPromptVisible] = useState(false);
 
   useEffect(() => {
     const session = userSession ? JSON.parse(userSession) : null;
@@ -22,11 +26,45 @@ function App() {
     setLoading(false);
   }, [userSession]);
 
-  if (loading || roleLoading) return <div>Loading...</div>;
+  // Handle the 'beforeinstallprompt' event
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+      setInstallPromptVisible(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Cleanup listener when the component is unmounted
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      // Show the install prompt
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the A2HS prompt');
+        } else {
+          console.log('User dismissed the A2HS prompt');
+        }
+        setDeferredPrompt(null);
+        setInstallPromptVisible(false);
+      });
+    }
+  };
 
   const checkUser = () => {
     return userSession !== null;
   };
+
+  if (loading || roleLoading) return <div>Loading...</div>;
 
   return (
     <SessionContextProvider supabaseClient={supabase}>
@@ -63,6 +101,12 @@ function App() {
             element={<UpdateUserInfo />}
           /> */}
         </Routes>
+
+        {installPromptVisible && (
+          <div className="install-prompt">
+            <Button onClick={handleInstallClick}>Install App</Button>
+          </div>
+        )}
       </Router>
     </SessionContextProvider>
   );

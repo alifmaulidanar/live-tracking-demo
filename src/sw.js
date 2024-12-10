@@ -69,7 +69,8 @@ async function getStoredLocations() {
         resolve([]);
         return;
       }
-
+      
+      console.log('Object store "locations" found in IndexedDB.✨');
       const transaction = db.transaction("locations", "readonly");
       const store = transaction.objectStore("locations");
       const getAllRequest = store.getAll();

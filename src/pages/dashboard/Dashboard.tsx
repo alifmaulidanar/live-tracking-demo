@@ -41,19 +41,36 @@ export const Dashboard = () => {
 
   // Fetch current user's location
   useEffect(() => {
+    let debounceTimeout: NodeJS.Timeout | null = null;
+    
     if (navigator.geolocation) {
-      navigator.geolocation.watchPosition((position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ lat: latitude, lng: longitude });
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude });
 
-        // Call the action function to write data to DB
-        if (user) {
-          const user_id = user.id;
-          saveLocationToDatabase(user_id, latitude, longitude);
+          // Call the action function to write data to DB
+          if (user) {
+            if (debounceTimeout) clearTimeout(debounceTimeout);
+
+            debounceTimeout = setTimeout(() => {
+              const user_id = user.id;
+              saveLocationToDatabase(user_id, latitude, longitude);
+            }, 10000); // Set debounce interval (e.g., 10 seconds)
+          }
+        }, (error) => {
+          console.error("Geolocation error:", error);
+        },
+        {
+          enableHighAccuracy: true, maximumAge: 10000 
         }
-      }, (error) => {
-        console.error("Geolocation error:", error);
-      }, { enableHighAccuracy: true, maximumAge: 10000 });
+      );
+
+      // Clean up the watchPosition listener and timeout
+      return () => {
+        navigator.geolocation.clearWatch(watchId);
+        if (debounceTimeout) clearTimeout(debounceTimeout);
+      };
     }
   }, [user]);
 

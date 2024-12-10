@@ -18,17 +18,20 @@ const getLastWrittenFromIndexedDB = () => {
 
     request.onsuccess = () => {
       const db = request.result;
+
+      if (!db.objectStoreNames.contains('meta')) {
+        console.error('Object store "meta" not found in IndexedDB.');
+        resolve(0);
+        return;
+      }
+
       const transaction = db.transaction('meta', 'readonly');
       const metaStore = transaction.objectStore('meta');
       const getRequest = metaStore.get('lastWritten');
 
       getRequest.onsuccess = () => {
         const result = getRequest.result;
-        if (result) {
-          resolve(result.value);
-        } else {
-          resolve(0);
-        }
+        resolve(result ? result.value : 0);
       };
       getRequest.onerror = reject;
     };
@@ -98,7 +101,7 @@ function storeLocationData(location: any) {
       }
       if (!db.objectStoreNames.contains('meta')) {
         const metaStore = db.createObjectStore('meta', { keyPath: 'key' });
-        metaStore.put({ key: 'lastWritten', value: new Date().getTime() });
+        metaStore.put({ key: 'lastWritten', value: 0 });
       }
     };
 
@@ -109,12 +112,17 @@ function storeLocationData(location: any) {
       const metaStore = transaction.objectStore('meta');
       store.add(location);
       console.log('Location saved to indexedDB:', location);
-      metaStore.put({ key: 'lastWritten', value: new Date().getTime() });
-      console.log('lastWritten saved to indexedDB.');
+      const now = new Date().getTime();
+      metaStore.put({ key: 'lastWritten', value: now });
+      console.log('lastWritten updated in IndexedDB:', now);
       console.log('Please check your connection to save to the main database.');
       resolve(true);
     };
-    request.onerror = reject;
+
+    request.onerror = (event) => {
+      console.error('Error opening IndexedDB:', event);
+      reject(event);
+    };
   });
 }
 

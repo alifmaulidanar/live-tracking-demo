@@ -32,6 +32,6 @@
   },
   "include": [
     "src",
-    "public/service-worker.js"
+    "src/sw.js"
   ]
 }

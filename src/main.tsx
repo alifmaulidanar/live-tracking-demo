@@ -6,7 +6,7 @@ import { createRoot } from 'react-dom/client'
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
-      .register('/service-worker.js', { type: "module" })
+      .register('/sw.js', { type: "module" })
       .then((registration) => {
         console.log('Service Worker terdaftar:', registration);
       })

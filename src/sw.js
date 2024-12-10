@@ -1,8 +1,8 @@
 import { saveLocationToDatabase } from "./lib/actions";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 
-cleanupOutdatedCaches() // Cleanup outdated caches
-precacheAndRoute(self.__WB_MANIFEST)  // Precache all the assets in the manifest
+cleanupOutdatedCaches(); // Cleanup outdated caches
+precacheAndRoute(self.__WB_MANIFEST); // Precache all the assets in the manifest
 
 // Install event listener to cache assets
 self.addEventListener("install", (event) => {
@@ -24,22 +24,6 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-// Fetch event listener to intercept requests and respond with cached data when server is offline
-self.addEventListener("fetch", (event) => {
-  if (event.request.method === "GET") {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        return (
-          response ||
-          fetch(event.request).catch(() => {
-            return caches.match("/offline.html"); // Fallback to offline page
-          })
-        );
-      })
-    );
-  }
-});
-
 // Function to sync location data with the backend
 async function syncLocationData() {
   const locations = await getStoredLocations();
@@ -49,9 +33,11 @@ async function syncLocationData() {
 
     // If location was successfully saved, remove from IndexedDB
     if (isSaved) {
-      console.log("Location saved successfully!");
+      console.log("Location synced successfully!");
       console.log("Location removed!");
       await removeLocation(location);
+    } else {
+      console.error("Failed to sync location:", location);
     }
   }
 }
@@ -64,12 +50,12 @@ async function getStoredLocations() {
     request.onsuccess = () => {
       const db = request.result;
 
-      if (!db.objectStoreNames.contains('locations')) {
+      if (!db.objectStoreNames.contains("locations")) {
         console.error('Object store "locations" not found in IndexedDB.');
         resolve([]);
         return;
       }
-      
+
       console.log('Object store "locations" found in IndexedDB.✨');
       const transaction = db.transaction("locations", "readonly");
       const store = transaction.objectStore("locations");
@@ -97,7 +83,7 @@ async function removeLocation(location) {
 
       console.log("Removing location from IndexedDB...");
       console.log({ deleteRequest });
-      deleteRequest.onsuccess = () => resolve();
+      deleteRequest.onsuccess = resolve;
       deleteRequest.onerror = reject;
     };
     request.onerror = reject;

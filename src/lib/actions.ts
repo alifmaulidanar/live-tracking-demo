@@ -20,9 +20,8 @@ const ensureStoresExist = (): Promise<void> => {
 
     request.onsuccess = () => {
       const db = request.result;
-
-      // Jika object store "meta" atau "locations" tidak ada, lakukan upgrade
       const storesToCreate: string[] = [];
+
       if (!db.objectStoreNames.contains("meta")) {
         storesToCreate.push("meta");
       }
@@ -33,7 +32,7 @@ const ensureStoresExist = (): Promise<void> => {
       if (storesToCreate.length > 0) {
         console.warn(`Missing object stores: ${storesToCreate.join(", ")}. Upgrading database...`);
         const version = db.version + 1;
-        db.close(); // Tutup database sebelum upgrade
+        db.close();
         const upgradeRequest = indexedDB.open("locationDB", version);
 
         upgradeRequest.onupgradeneeded = () => {
@@ -47,18 +46,15 @@ const ensureStoresExist = (): Promise<void> => {
             console.log("Object store 'locations' created during upgrade.");
           }
         };
-
         upgradeRequest.onsuccess = () => resolve();
         upgradeRequest.onerror = reject;
       } else {
         resolve();
       }
     };
-
     request.onerror = reject;
   });
 };
-
 
 // Get the last written time from the local storage or indexedDB
 const getLastWritten = (): Promise<number> => {
@@ -142,7 +138,7 @@ const canWriteData = async () => {
     }
   };
 
-  if (lastWritten && now - lastWritten < 300000) { // 300000 ms = 5 menit
+  if (lastWritten && now - lastWritten < 300000) { // 300000 ms = 5 minutes
     console.log('Too soon to write data. Please wait 5 minutes.');
     return false;
   }
@@ -225,7 +221,6 @@ async function storeLocationData(location: any) {
     };
   });
 }
-
 
 // Get the latest location for each user
 export const getLatestLocationForEachUser = async () => {
